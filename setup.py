@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(
-        name='sample',
+        name='raspibot',
         version='0.0.1',
         description='Package to control the RoboSchool RaspiBot',
 
