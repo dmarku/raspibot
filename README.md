@@ -51,4 +51,4 @@ nosetests
 
 ### Contributing
 
-If you want to contribute to the project, you can (open issues on Github)[https://github.com/tuc-roboschool/raspibot/issues] or fork the project and open a pull request.
+If you want to contribute to the project, you can [open issues on Github](https://github.com/tuc-roboschool/raspibot/issues) or fork the project and open a pull request.
