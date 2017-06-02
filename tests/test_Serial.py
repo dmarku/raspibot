@@ -37,4 +37,24 @@ def test_get_encoders():
     assert result.left == left
     assert result.right == right
     
+def test_get_left_encoder():
+    value = 43690
+    encoder_bytes = value.to_bytes(2, 'little')
+    serial = MockSerial(encoder_bytes)
+    
+    attiny = AttinyProtocol(serial)
+    result = attiny.get_left_encoder()
+    
+    assert result == value
+    
+def test_get_right_encoder():
+    value = 21845
+    encoder_bytes = value.to_bytes(2, 'little')
+    serial = MockSerial(encoder_bytes)
+    
+    attiny = AttinyProtocol(serial)
+    result = attiny.get_right_encoder()
+    
+    assert result == value
+    
 # flake8: noqa
