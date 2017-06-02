@@ -61,4 +61,11 @@ class AttinyProtocol(object):
         """Request an 'alive' signal from the microcontroller."""
         self._serial.write(ALIVE)
         response = self._serial.read(1)
-        return response == ACK
+        if response == ACK:
+            return True
+        # empty response can happen on a timeout, which we interpret as
+        # "not alive"
+        elif response == NAK or response == b'':
+            return False
+        else:
+            raise InvalidResponseException()
