@@ -6,6 +6,8 @@ EncoderValues = namedtuple('EncoderValues', 'left right')
 
 # Named byte values for the protocol commands
 ENCODERS_BOTH = b'\x04'
+ENCODERS_LEFT = b'\x03'
+ENCODERS_RIGHT = b'\x02'
 
 
 class AttinyProtocol(object):
@@ -23,3 +25,17 @@ class AttinyProtocol(object):
         left = int.from_bytes(response[:2], 'little')
         right = int.from_bytes(response[2:], 'little')
         return EncoderValues(left, right)
+
+    def get_left_encoder(self):
+        """Request the left encoder value."""
+        self._serial.write(ENCODERS_LEFT)
+        response = self._serial.read(2)
+        value = int.from_bytes(response, 'little')
+        return value
+
+    def get_right_encoder(self):
+        """Request the right encoder value."""
+        self._serial.write(ENCODERS_RIGHT)
+        response = self._serial.read(2)
+        value = int.from_bytes(response, 'little')
+        return value
