@@ -17,6 +17,16 @@ ACK = b'\x10'
 NAK = b'\x14'
 
 
+class InvalidResponseException(Exception):
+    """
+    Raised when the protocol implementation reads an unexpected byte.
+
+    This is typically something that is neither an ACK nor a NAK.
+    """
+
+    pass
+
+
 class AttinyProtocol(object):
     """Provides methods for protocol transactions."""
 

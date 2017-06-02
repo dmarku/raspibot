@@ -1,4 +1,6 @@
-from raspibot.Serial import AttinyProtocol
+from raspibot.Serial import AttinyProtocol, InvalidResponseException
+
+import pytest
 
 
 class MockSerial:
@@ -62,7 +64,7 @@ def test_get_right_encoder():
     assert serial.received == b'\x02'
     assert result == value
     
-def test_alive():
+def test_alive_ack():
     # send out an ACK byte
     serial = MockSerial(b'\x10')
     
@@ -71,5 +73,25 @@ def test_alive():
     
     assert serial.received == b'\x01'
     assert result == True
+    
+def test_alive_nak():
+    # send out an NAK byte
+    serial = MockSerial(b'\x14')
+    
+    attiny = AttinyProtocol(serial)
+    result = attiny.alive()
+    
+    assert serial.received == b'\x01'
+    assert result == False
+    
+def test_alive_undefined():
+    # send out something that is neither an ACK or a NAK byte
+    serial = MockSerial(b'\x23')
+    
+    attiny = AttinyProtocol(serial)
+    with pytest.raises(InvalidResponseException):
+        attiny.alive()
+
+    assert serial.received == b'\x01'
     
 # flake8: noqa
