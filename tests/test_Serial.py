@@ -6,9 +6,10 @@ class MockSerial:
     def __init__(self, bytes):
         self._bytes = bytes
         self._position = 0
+        self.received = b''
 
     def write(self, bytes):
-        pass
+        self.received += bytes
 
     def read(self, count):
         try:
@@ -25,6 +26,8 @@ def test_get_encoders():
     
     attiny = AttinyProtocol(serial)
     result = attiny.get_encoders()
+    
+    assert serial.received == b'\x04'
     
     # use it as a tuple
     assert result == (left, right)
@@ -45,6 +48,7 @@ def test_get_left_encoder():
     attiny = AttinyProtocol(serial)
     result = attiny.get_left_encoder()
     
+    assert serial.received == b'\x03'
     assert result == value
     
 def test_get_right_encoder():
@@ -55,6 +59,7 @@ def test_get_right_encoder():
     attiny = AttinyProtocol(serial)
     result = attiny.get_right_encoder()
     
+    assert serial.received == b'\x02'
     assert result == value
     
 # flake8: noqa
