@@ -5,9 +5,16 @@ from collections import namedtuple
 EncoderValues = namedtuple('EncoderValues', 'left right')
 
 # Named byte values for the protocol commands
-ENCODERS_BOTH = b'\x04'
-ENCODERS_LEFT = b'\x03'
+
+# Requests
+ALIVE = b'\x01'
 ENCODERS_RIGHT = b'\x02'
+ENCODERS_LEFT = b'\x03'
+ENCODERS_BOTH = b'\x04'
+
+# Responses
+ACK = b'\x10'
+NAK = b'\x14'
 
 
 class AttinyProtocol(object):
@@ -39,3 +46,9 @@ class AttinyProtocol(object):
         response = self._serial.read(2)
         value = int.from_bytes(response, 'little')
         return value
+
+    def alive(self):
+        """Request an 'alive' signal from the microcontroller."""
+        self._serial.write(ALIVE)
+        response = self._serial.read(1)
+        return response == ACK
