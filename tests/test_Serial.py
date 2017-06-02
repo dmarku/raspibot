@@ -62,4 +62,14 @@ def test_get_right_encoder():
     assert serial.received == b'\x02'
     assert result == value
     
+def test_alive():
+    # send out an ACK byte
+    serial = MockSerial(b'\x10')
+    
+    attiny = AttinyProtocol(serial)
+    result = attiny.alive()
+    
+    assert serial.received == b'\x01'
+    assert result == True
+    
 # flake8: noqa
