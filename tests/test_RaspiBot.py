@@ -1,8 +1,9 @@
-from unittest import TestCase
-
 from raspibot import RaspiBot
 
-class TestRaspiBot(TestCase):
+
+class TestRaspiBot:
     def test_hello(self):
         bot = RaspiBot()
-        self.assertEqual(bot.hello(), "Hello")
+        assert bot.hello() == 'Hello'
+
+# flake8: noqa

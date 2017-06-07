@@ -39,15 +39,12 @@ pip3 install --user --editable .
 
 ### Running the Tests
 
-To run the tests, use nose
+To run the tests, use pytest (in the project directory)
 
 ```
-pip3 install nose
-nosetests
+pip3 install pytest
+pytest
 ```
-
-(from http://python-packaging.readthedocs.io/en/latest/testing.html)
-
 
 ### Contributing
 
