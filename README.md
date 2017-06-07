@@ -63,6 +63,13 @@ make html
 
 There are also builders for EPUB (`make epub`) and PDF via LaTeX (`make latexpdf`).
 
+Optionally, I can also recommend the [sphinx-autobuild](https://github.com/GaretJax/sphinx-autobuild) package. It provides a server that watches the documentation sources for changes, rebuilds the HTML files automatically and starts a web server that automatically reloads the page on changes. Install and run:
+
+```
+pip3 install sphinx-autobuild
+sphinx-autobuild docs/ docs/_build/html
+```
+
 ### Contributing
 
 If you want to contribute to the project, you can [open issues on Github](https://github.com/tuc-roboschool/raspibot/issues) or fork the project and open a pull request.
