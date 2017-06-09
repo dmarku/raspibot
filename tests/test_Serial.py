@@ -176,7 +176,7 @@ def test_set_right_motor_timeout():
     assert result == False
 
 def test_set_right_motor_invalid():
-    serial = MockSerial(b'')
+    serial = MockSerial(INVALID_RESPONSE)
     
     attiny = AttinyProtocol(serial)
     with pytest.raises(InvalidResponseException):
