@@ -11,6 +11,17 @@ ENCODERS_BOTH = b'\x04'
 ACK = b'\x10'
 NAK = b'\x14'
 
+SET_BOTH_MOTORS = b'\x2D'
+
+MOTOR_MIN = -127
+MOTOR_MAX = 127
+MOTOR_ZERO = 0
+
+# as signed byte values:
+BYTES_MOTOR_MIN = MOTOR_MIN.to_bytes(1, 'little', signed=True)
+BYTES_MOTOR_MAX = MOTOR_MAX.to_bytes(1, 'little', signed=True)
+BYTES_MOTOR_ZERO = MOTOR_ZERO.to_bytes(1, 'little', signed=True)
+
 INVALID_RESPONSE = b'\x23'
 
 class MockSerial:
@@ -103,5 +114,56 @@ def test_alive_undefined():
         attiny.alive()
 
     assert serial.received == ALIVE
+    
+def test_set_both_motors():
+    serial = MockSerial(ACK)
+    
+    left = MOTOR_MIN
+    left_bytes = BYTES_MOTOR_MIN
+    
+    right = MOTOR_MAX
+    right_bytes = BYTES_MOTOR_MAX
+    
+    attiny = AttinyProtocol(serial)
+    attiny.set_motors(left, right)
+    
+    assert len(serial.received) == 3
+    assert serial.received[0] == SET_BOTH_MOTORS
+    assert serial.received[1] == left_bytes
+    assert serial.received[2] == right_bytes
+    
+def test_set_both_motors2():
+    serial = MockSerial(ACK)
+    
+    left = MOTOR_MAX
+    left_bytes = BYTES_MOTOR_MAX
+    
+    right = MOTOR_MIN
+    right_bytes = BYTES_MOTOR_MIN
+    
+    attiny = AttinyProtocol(serial)
+    attiny.set_motors(left, right)
+    
+    assert len(serial.received) == 3
+    assert serial.received[0] == SET_BOTH_MOTORS
+    assert serial.received[1] == left_bytes
+    assert serial.received[2] == right_bytes
+    
+def test_set_both_motors_zero():
+    serial = MockSerial(ACK)
+    
+    left = MOTOR_ZERO
+    left_bytes = BYTES_MOTOR_ZERO
+    
+    right = MOTOR_ZERO
+    right_bytes = BYTES_MOTOR_ZERO
+    
+    attiny = AttinyProtocol(serial)
+    attiny.set_motors(left, right)
+    
+    assert len(serial.received) == 3
+    assert serial.received[0] == SET_BOTH_MOTORS
+    assert serial.received[1] == left_bytes
+    assert serial.received[2] == right_bytes
     
 # flake8: noqa
