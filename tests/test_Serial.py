@@ -15,6 +15,8 @@ ENCODERS_RESET_BOTH = b'\x07'
 ACK = b'\x10'
 NAK = b'\x14'
 
+STOP_MOTORS = b'\x21'
+
 SET_RIGHT_MOTOR = b'\x25'
 SET_LEFT_MOTOR = b'\x29'
 SET_BOTH_MOTORS = b'\x2D'
@@ -228,6 +230,46 @@ def test_alive_undefined():
         attiny.alive()
 
     assert serial.received == ALIVE
+    
+def test_stop_motors():
+    serial = MockSerial(ACK)
+    
+    attiny = AttinyProtocol(serial)
+    result = attiny.stop_motors()
+    
+    assert serial.received == STOP_MOTORS
+    
+    assert result == True
+    
+def test_stop_motors_nak():
+    serial = MockSerial(NAK)
+    
+    attiny = AttinyProtocol(serial)
+    result = attiny.stop_motors()
+    
+    assert serial.received == STOP_MOTORS
+    
+    assert result == False
+    
+def test_stop_motors_timeout():
+    serial = MockSerial(b'')
+    
+    attiny = AttinyProtocol(serial)
+    result = attiny.stop_motors()
+    
+    assert serial.received == STOP_MOTORS
+    
+    assert result == False
+    
+def test_stop_motors_undefined():
+    # send out something that is neither an ACK or a NAK byte
+    serial = MockSerial(INVALID_RESPONSE)
+    
+    attiny = AttinyProtocol(serial)
+    with pytest.raises(InvalidResponseException):
+        attiny.stop_motors()
+
+    assert serial.received == STOP_MOTORS
 
 def test_set_right_motor_min():
     serial = MockSerial(ACK)
