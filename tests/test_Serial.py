@@ -124,6 +124,8 @@ def test_reset_right_encoder_invalid():
     
     with pytest.raises(InvalidResponseException):
         attiny.reset_right_encoder()
+        
+    assert serial.received == ENCODERS_RESET_RIGHT
     
 def test_reset_left_encoder():
     serial = MockSerial(ACK)
@@ -158,6 +160,8 @@ def test_reset_left_encoder_invalid():
     
     with pytest.raises(InvalidResponseException):
         attiny.reset_left_encoder()
+        
+    assert serial.received == ENCODERS_RESET_LEFT
     
 def test_alive_ack():
     # send out an ACK byte
@@ -281,6 +285,8 @@ def test_set_right_motor_invalid():
     attiny = AttinyProtocol(serial)
     with pytest.raises(InvalidResponseException):
         attiny.set_right_motor(0)
+        
+    assert serial.received[:1] == SET_RIGHT_MOTOR
     
 
 def test_set_left_motor_min():
@@ -379,6 +385,8 @@ def test_set_left_motor_invalid():
     attiny = AttinyProtocol(serial)
     with pytest.raises(InvalidResponseException):
         attiny.set_left_motor(0)
+        
+    assert serial.received[:1] == SET_LEFT_MOTOR
 
 def test_set_both_motors_minmax():
     serial = MockSerial(ACK)
@@ -479,5 +487,7 @@ def test_set_both_motors_invalid():
     attiny = AttinyProtocol(serial)
     with pytest.raises(InvalidResponseException):
         attiny.set_motors(0, 0)
+        
+    assert serial.received[:1] == SET_BOTH_MOTORS
 
 # flake8: noqa
