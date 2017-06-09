@@ -12,9 +12,21 @@ ENCODERS_RIGHT = b'\x02'
 ENCODERS_LEFT = b'\x03'
 ENCODERS_BOTH = b'\x04'
 
+SET_LEFT_MOTOR = b'\x29'
+SET_RIGHT_MOTOR = b'\x25'
+SET_BOTH_MOTORS = b'\x2D'
+STOP_MOTORS = b'\x21'
+
 # Responses
 ACK = b'\x10'
 NAK = b'\x14'
+
+MOTOR_MIN = -127
+MOTOR_MAX = 127
+
+
+def _clamp(value, minimum, maximum):
+    return min(maximum, max(minimum, value))
 
 
 class InvalidResponseException(Exception):
@@ -65,6 +77,30 @@ class AttinyProtocol(object):
             return True
         # empty response can happen on a timeout, which we interpret as
         # "not alive"
+        elif response == NAK or response == b'':
+            return False
+        else:
+            raise InvalidResponseException()
+
+    def set_motors(self, left, right):
+        """
+        Set the speed of both motors.
+
+        Values can be in the range [-127, 127]. Speeds higher than that will be
+        set to their respective extreme. Negative values turn the wheel
+        backwards, positive values turn it forwards. Zero stops the motor.
+        Higher absolute values mean higher speed.
+        """
+        left = _clamp(left, MOTOR_MIN, MOTOR_MAX)
+        right = _clamp(right, MOTOR_MIN, MOTOR_MAX)
+        left_bytes = left.to_bytes(1, 'little', signed=True)
+        right_bytes = right.to_bytes(1, 'little', signed=True)
+
+        self._serial.write(SET_BOTH_MOTORS + left_bytes + right_bytes)
+
+        response = self._serial.read(1)
+        if response == ACK:
+            return True
         elif response == NAK or response == b'':
             return False
         else:

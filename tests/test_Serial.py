@@ -159,11 +159,13 @@ def test_set_both_motors_zero():
     right_bytes = BYTES_MOTOR_ZERO
     
     attiny = AttinyProtocol(serial)
-    attiny.set_motors(left, right)
+    result = attiny.set_motors(left, right)
     
     assert len(serial.received) == 3
     assert serial.received[0] == SET_BOTH_MOTORS
     assert serial.received[1] == left_bytes
     assert serial.received[2] == right_bytes
+    
+    assert result == True
     
 # flake8: noqa
