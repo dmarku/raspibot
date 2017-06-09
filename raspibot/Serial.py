@@ -75,7 +75,7 @@ class AttinyProtocol(object):
         return value
 
     def reset_encoders(self):
-        """Request an 'alive' signal from the microcontroller."""
+        """Reset both left and right encoder counters to zero."""
         self._serial.write(ENCODERS_RESET_BOTH)
         response = self._serial.read(1)
         if response == ACK:
@@ -88,7 +88,7 @@ class AttinyProtocol(object):
             raise InvalidResponseException()
 
     def reset_left_encoder(self):
-        """Request an 'alive' signal from the microcontroller."""
+        """Reset the left encoder counter to zero."""
         self._serial.write(ENCODERS_RESET_LEFT)
         response = self._serial.read(1)
         if response == ACK:
@@ -101,7 +101,7 @@ class AttinyProtocol(object):
             raise InvalidResponseException()
 
     def reset_right_encoder(self):
-        """Request an 'alive' signal from the microcontroller."""
+        """Reset the right encoder counter to zero."""
         self._serial.write(ENCODERS_RESET_RIGHT)
         response = self._serial.read(1)
         if response == ACK:
