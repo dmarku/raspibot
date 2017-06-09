@@ -51,22 +51,22 @@ class AttinyProtocol(object):
         """Request both left and right encoder values."""
         self._serial.write(ENCODERS_BOTH)
         response = self._serial.read(4)
-        left = int.from_bytes(response[:2], 'little')
-        right = int.from_bytes(response[2:], 'little')
+        left = int.from_bytes(response[:2], 'big')
+        right = int.from_bytes(response[2:], 'big')
         return EncoderValues(left, right)
 
     def get_left_encoder(self):
         """Request the left encoder value."""
         self._serial.write(ENCODERS_LEFT)
         response = self._serial.read(2)
-        value = int.from_bytes(response, 'little')
+        value = int.from_bytes(response, 'big')
         return value
 
     def get_right_encoder(self):
         """Request the right encoder value."""
         self._serial.write(ENCODERS_RIGHT)
         response = self._serial.read(2)
-        value = int.from_bytes(response, 'little')
+        value = int.from_bytes(response, 'big')
         return value
 
     def alive(self):
@@ -93,8 +93,8 @@ class AttinyProtocol(object):
         """
         left = _clamp(left, MOTOR_MIN, MOTOR_MAX)
         right = _clamp(right, MOTOR_MIN, MOTOR_MAX)
-        left_bytes = left.to_bytes(1, 'little', signed=True)
-        right_bytes = right.to_bytes(1, 'little', signed=True)
+        left_bytes = left.to_bytes(1, 'big', signed=True)
+        right_bytes = right.to_bytes(1, 'big', signed=True)
 
         self._serial.write(SET_BOTH_MOTORS + left_bytes + right_bytes)
 
@@ -116,7 +116,7 @@ class AttinyProtocol(object):
         Higher absolute values mean higher speed.
         """
         speed = _clamp(speed, MOTOR_MIN, MOTOR_MAX)
-        speed_bytes = speed.to_bytes(1, 'little', signed=True)
+        speed_bytes = speed.to_bytes(1, 'big', signed=True)
 
         self._serial.write(SET_LEFT_MOTOR + speed_bytes)
 
@@ -138,7 +138,7 @@ class AttinyProtocol(object):
         Higher absolute values mean higher speed.
         """
         speed = _clamp(speed, MOTOR_MIN, MOTOR_MAX)
-        speed_bytes = speed.to_bytes(1, 'little', signed=True)
+        speed_bytes = speed.to_bytes(1, 'big', signed=True)
 
         self._serial.write(SET_RIGHT_MOTOR + speed_bytes)
 

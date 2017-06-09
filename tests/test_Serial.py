@@ -8,6 +8,10 @@ ENCODERS_RIGHT = b'\x02'
 ENCODERS_LEFT = b'\x03'
 ENCODERS_BOTH = b'\x04'
 
+ENCODERS_RESET_RIGHT = b'\x05'
+ENCODERS_RESET_LEFT = b'\x06'
+ENCODERS_RESET_BOTH = b'\x07'
+
 ACK = b'\x10'
 NAK = b'\x14'
 
@@ -20,9 +24,9 @@ MOTOR_MAX = 127
 MOTOR_ZERO = 0
 
 # as signed byte values:
-BYTES_MOTOR_MIN = MOTOR_MIN.to_bytes(1, 'little', signed=True)
-BYTES_MOTOR_MAX = MOTOR_MAX.to_bytes(1, 'little', signed=True)
-BYTES_MOTOR_ZERO = MOTOR_ZERO.to_bytes(1, 'little', signed=True)
+BYTES_MOTOR_MIN = MOTOR_MIN.to_bytes(1, 'big', signed=True)
+BYTES_MOTOR_MAX = MOTOR_MAX.to_bytes(1, 'big', signed=True)
+BYTES_MOTOR_ZERO = MOTOR_ZERO.to_bytes(1, 'big', signed=True)
 
 INVALID_RESPONSE = b'\x23'
 
@@ -46,7 +50,7 @@ class MockSerial:
 
 def test_get_encoders():
     left, right = 0, 65535
-    encoder_bytes = left.to_bytes(2, 'little') + right.to_bytes(2, 'little')
+    encoder_bytes = left.to_bytes(2, 'big') + right.to_bytes(2, 'big')
     serial = MockSerial(encoder_bytes)
     
     attiny = AttinyProtocol(serial)
@@ -67,7 +71,7 @@ def test_get_encoders():
     
 def test_get_left_encoder():
     value = 43690
-    encoder_bytes = value.to_bytes(2, 'little')
+    encoder_bytes = value.to_bytes(2, 'big')
     serial = MockSerial(encoder_bytes)
     
     attiny = AttinyProtocol(serial)
@@ -78,7 +82,7 @@ def test_get_left_encoder():
     
 def test_get_right_encoder():
     value = 21845
-    encoder_bytes = value.to_bytes(2, 'little')
+    encoder_bytes = value.to_bytes(2, 'big')
     serial = MockSerial(encoder_bytes)
     
     attiny = AttinyProtocol(serial)
@@ -407,4 +411,5 @@ def test_set_both_motors_invalid():
     attiny = AttinyProtocol(serial)
     with pytest.raises(InvalidResponseException):
         attiny.set_motors(0, 0)
+
 # flake8: noqa
