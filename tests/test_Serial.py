@@ -162,4 +162,28 @@ def test_set_both_motors_zero():
     
     assert result == True
     
+def test_set_both_motors_nak():
+    serial = MockSerial(NAK)
+    
+    attiny = AttinyProtocol(serial)
+    result = attiny.set_motors(0, 0)
+    
+    assert result == False
+    
+def test_set_both_motors_timeout():
+    serial = MockSerial(b'')
+    
+    attiny = AttinyProtocol(serial)
+    result = attiny.set_motors(0, 0)
+    
+    assert result == False
+    
+def test_set_both_motors_invalid():
+    serial = MockSerial(INVALID_RESPONSE)
+    
+    attiny = AttinyProtocol(serial)
+    with pytest.raises(InvalidResponseException):
+        attiny.set_motors(0, 0)
+
+
 # flake8: noqa
