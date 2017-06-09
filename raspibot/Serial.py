@@ -17,6 +17,8 @@ ENCODERS_RESET_RIGHT = b'\x05'
 ENCODERS_RESET_LEFT = b'\x06'
 ENCODERS_RESET_BOTH = b'\x07'
 
+ECHO = b'\x0C'
+
 STOP_MOTORS = b'\x21'
 SET_LEFT_MOTOR = b'\x29'
 SET_RIGHT_MOTOR = b'\x25'
@@ -40,6 +42,12 @@ class InvalidResponseException(Exception):
 
     This is typically something that is neither an ACK nor a NAK.
     """
+
+    pass
+
+
+class InvalidLengthException(Exception):
+    """Raised when the "Echo" command receives none or more than one byte."""
 
     pass
 
@@ -125,6 +133,16 @@ class AttinyProtocol(object):
             return False
         else:
             raise InvalidResponseException()
+
+    def echo(self, byte):
+        """Receive back the same byte that was sent to the ATtiny."""
+        if len(byte) != 1:
+            raise InvalidLengthException()
+        self._serial.write(ECHO + byte)
+        response = self._serial.read(1)
+        if response != byte:
+            raise InvalidResponseException()
+        return response
 
     def stop_motors(self):
         """Immediately stops both motors."""
