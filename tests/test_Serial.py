@@ -131,10 +131,38 @@ def test_set_right_motor_min():
     
     assert result == True
 
+def test_set_right_motor_under_min():
+    serial = MockSerial(ACK)
+    
+    right = MOTOR_MIN - 1
+    right_bytes = BYTES_MOTOR_MIN
+    
+    attiny = AttinyProtocol(serial)
+    result = attiny.set_right_motor(right)
+    
+    assert len(serial.received) == 2
+    assert serial.received == SET_RIGHT_MOTOR + right_bytes
+    
+    assert result == True
+
 def test_set_right_motor_max():
     serial = MockSerial(ACK)
     
     right = MOTOR_MAX
+    right_bytes = BYTES_MOTOR_MAX
+    
+    attiny = AttinyProtocol(serial)
+    result = attiny.set_right_motor(right)
+    
+    assert len(serial.received) == 2
+    assert serial.received == SET_RIGHT_MOTOR + right_bytes
+    
+    assert result == True
+
+def test_set_right_motor_over_max():
+    serial = MockSerial(ACK)
+    
+    right = MOTOR_MAX + 1
     right_bytes = BYTES_MOTOR_MAX
     
     attiny = AttinyProtocol(serial)
@@ -197,11 +225,38 @@ def test_set_left_motor_min():
     
     assert result == True
 
+def test_set_left_motor_under_min():
+    serial = MockSerial(ACK)
+    
+    left = MOTOR_MIN - 1
+    left_bytes = BYTES_MOTOR_MIN
+    
+    attiny = AttinyProtocol(serial)
+    result = attiny.set_left_motor(left);
+    
+    assert len(serial.received) == 2
+    assert serial.received == SET_LEFT_MOTOR + left_bytes
+    
+    assert result == True
 
 def test_set_left_motor_max():
     serial = MockSerial(ACK)
     
     left = MOTOR_MAX
+    left_bytes = BYTES_MOTOR_MAX
+    
+    attiny = AttinyProtocol(serial)
+    result = attiny.set_left_motor(left);
+    
+    assert len(serial.received) == 2
+    assert serial.received == SET_LEFT_MOTOR + left_bytes
+    
+    assert result == True
+
+def test_set_left_motor_over_max():
+    serial = MockSerial(ACK)
+    
+    left = MOTOR_MAX + 1
     left_bytes = BYTES_MOTOR_MAX
     
     attiny = AttinyProtocol(serial)
@@ -253,8 +308,7 @@ def test_set_left_motor_invalid():
     with pytest.raises(InvalidResponseException):
         attiny.set_left_motor(0)
 
-    
-def test_set_both_motors():
+def test_set_both_motors_minmax():
     serial = MockSerial(ACK)
     
     left = MOTOR_MIN
@@ -269,13 +323,43 @@ def test_set_both_motors():
     assert len(serial.received) == 3
     assert serial.received == SET_BOTH_MOTORS + left_bytes + right_bytes
     
-def test_set_both_motors2():
+def test_set_both_motors_exceed_minmax():
+    serial = MockSerial(ACK)
+    
+    left = MOTOR_MIN - 1
+    left_bytes = BYTES_MOTOR_MIN
+    
+    right = MOTOR_MAX + 1
+    right_bytes = BYTES_MOTOR_MAX
+    
+    attiny = AttinyProtocol(serial)
+    attiny.set_motors(left, right)
+    
+    assert len(serial.received) == 3
+    assert serial.received == SET_BOTH_MOTORS + left_bytes + right_bytes
+    
+def test_set_both_motors_maxmin():
     serial = MockSerial(ACK)
     
     left = MOTOR_MAX
     left_bytes = BYTES_MOTOR_MAX
     
     right = MOTOR_MIN
+    right_bytes = BYTES_MOTOR_MIN
+    
+    attiny = AttinyProtocol(serial)
+    attiny.set_motors(left, right)
+    
+    assert len(serial.received) == 3
+    assert serial.received == SET_BOTH_MOTORS + left_bytes + right_bytes
+    
+def test_set_both_motors_exceed_maxmin():
+    serial = MockSerial(ACK)
+    
+    left = MOTOR_MAX + 1
+    left_bytes = BYTES_MOTOR_MAX
+    
+    right = MOTOR_MIN - 1
     right_bytes = BYTES_MOTOR_MIN
     
     attiny = AttinyProtocol(serial)
