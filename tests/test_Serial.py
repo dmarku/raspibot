@@ -1,4 +1,4 @@
-from raspibot.Serial import AttinyProtocol, InvalidResponseException
+from raspibot.Serial import AttinyProtocol, InvalidResponseException, InvalidLengthException
 
 import pytest
 
@@ -247,6 +247,16 @@ def test_echo():
     
     assert serial.received == ECHO + ECHO_TEST
     assert response == ECHO_TEST
+
+def test_echo_too_long():
+    serial = MockSerial(b'')
+    
+    attiny = AttinyProtocol(serial)
+    
+    with pytest.raises(InvalidLengthException):
+        attiny.echo(b'abcd')
+        
+    assert serial.received == b''
 
 def test_echo_invalid():
     serial = MockSerial(ECHO_INVALID)
