@@ -8,9 +8,14 @@ EncoderValues = namedtuple('EncoderValues', 'left right')
 
 # Requests
 ALIVE = b'\x01'
+
 ENCODERS_RIGHT = b'\x02'
 ENCODERS_LEFT = b'\x03'
 ENCODERS_BOTH = b'\x04'
+
+ENCODERS_RESET_RIGHT = b'\x05'
+ENCODERS_RESET_LEFT = b'\x06'
+ENCODERS_RESET_BOTH = b'\x07'
 
 SET_LEFT_MOTOR = b'\x29'
 SET_RIGHT_MOTOR = b'\x25'
@@ -68,6 +73,45 @@ class AttinyProtocol(object):
         response = self._serial.read(2)
         value = int.from_bytes(response, 'big')
         return value
+
+    def reset_encoders(self):
+        """Request an 'alive' signal from the microcontroller."""
+        self._serial.write(ENCODERS_RESET_BOTH)
+        response = self._serial.read(1)
+        if response == ACK:
+            return True
+        # empty response can happen on a timeout, which we interpret as
+        # "not alive"
+        elif response == NAK or response == b'':
+            return False
+        else:
+            raise InvalidResponseException()
+
+    def reset_left_encoder(self):
+        """Request an 'alive' signal from the microcontroller."""
+        self._serial.write(ENCODERS_RESET_LEFT)
+        response = self._serial.read(1)
+        if response == ACK:
+            return True
+        # empty response can happen on a timeout, which we interpret as
+        # "not alive"
+        elif response == NAK or response == b'':
+            return False
+        else:
+            raise InvalidResponseException()
+
+    def reset_right_encoder(self):
+        """Request an 'alive' signal from the microcontroller."""
+        self._serial.write(ENCODERS_RESET_RIGHT)
+        response = self._serial.read(1)
+        if response == ACK:
+            return True
+        # empty response can happen on a timeout, which we interpret as
+        # "not alive"
+        elif response == NAK or response == b'':
+            return False
+        else:
+            raise InvalidResponseException()
 
     def alive(self):
         """Request an 'alive' signal from the microcontroller."""
