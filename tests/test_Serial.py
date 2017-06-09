@@ -91,6 +91,40 @@ def test_get_right_encoder():
     assert serial.received == ENCODERS_RIGHT
     assert result == value
     
+def test_reset_left_encoder():
+    serial = MockSerial(ACK)
+    attiny = AttinyProtocol(serial)
+    
+    result = attiny.reset_left_encoder()
+    
+    assert serial.received == ENCODERS_RESET_LEFT
+    assert result == True
+    
+def test_reset_left_encoder_nak():
+    serial = MockSerial(NAK)
+    attiny = AttinyProtocol(serial)
+    
+    result = attiny.reset_left_encoder()
+    
+    assert serial.received == ENCODERS_RESET_LEFT
+    assert result == False
+    
+def test_reset_left_encoder_timeout():
+    serial = MockSerial(b'')
+    attiny = AttinyProtocol(serial)
+    
+    result = attiny.reset_left_encoder()
+    
+    assert serial.received == ENCODERS_RESET_LEFT
+    assert result == False
+    
+def test_reset_left_encoder_invalid():
+    serial = MockSerial(INVALID_RESPONSE)
+    attiny = AttinyProtocol(serial)
+    
+    with pytest.raises(InvalidResponseException):
+        attiny.reset_left_encoder()
+    
 def test_alive_ack():
     # send out an ACK byte
     serial = MockSerial(ACK)
