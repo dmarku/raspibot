@@ -2,6 +2,16 @@ from raspibot.Serial import AttinyProtocol, InvalidResponseException
 
 import pytest
 
+ALIVE = b'\x01'
+
+ENCODERS_RIGHT = b'\x02'
+ENCODERS_LEFT = b'\x03'
+ENCODERS_BOTH = b'\x04'
+
+ACK = b'\x10'
+NAK = b'\x14'
+
+INVALID_RESPONSE = b'\x23'
 
 class MockSerial:
 
@@ -29,7 +39,7 @@ def test_get_encoders():
     attiny = AttinyProtocol(serial)
     result = attiny.get_encoders()
     
-    assert serial.received == b'\x04'
+    assert serial.received == ENCODERS_BOTH
     
     # use it as a tuple
     assert result == (left, right)
@@ -50,7 +60,7 @@ def test_get_left_encoder():
     attiny = AttinyProtocol(serial)
     result = attiny.get_left_encoder()
     
-    assert serial.received == b'\x03'
+    assert serial.received == ENCODERS_LEFT
     assert result == value
     
 def test_get_right_encoder():
@@ -61,37 +71,37 @@ def test_get_right_encoder():
     attiny = AttinyProtocol(serial)
     result = attiny.get_right_encoder()
     
-    assert serial.received == b'\x02'
+    assert serial.received == ENCODERS_RIGHT
     assert result == value
     
 def test_alive_ack():
     # send out an ACK byte
-    serial = MockSerial(b'\x10')
+    serial = MockSerial(ACK)
     
     attiny = AttinyProtocol(serial)
     result = attiny.alive()
     
-    assert serial.received == b'\x01'
+    assert serial.received == ALIVE
     assert result == True
     
 def test_alive_nak():
     # send out an NAK byte
-    serial = MockSerial(b'\x14')
+    serial = MockSerial(NAK)
     
     attiny = AttinyProtocol(serial)
     result = attiny.alive()
     
-    assert serial.received == b'\x01'
+    assert serial.received == ALIVE
     assert result == False
     
 def test_alive_undefined():
     # send out something that is neither an ACK or a NAK byte
-    serial = MockSerial(b'\x23')
+    serial = MockSerial(INVALID_RESPONSE)
     
     attiny = AttinyProtocol(serial)
     with pytest.raises(InvalidResponseException):
         attiny.alive()
 
-    assert serial.received == b'\x01'
+    assert serial.received == ALIVE
     
 # flake8: noqa
