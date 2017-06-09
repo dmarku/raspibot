@@ -17,10 +17,10 @@ ENCODERS_RESET_RIGHT = b'\x05'
 ENCODERS_RESET_LEFT = b'\x06'
 ENCODERS_RESET_BOTH = b'\x07'
 
+STOP_MOTORS = b'\x21'
 SET_LEFT_MOTOR = b'\x29'
 SET_RIGHT_MOTOR = b'\x25'
 SET_BOTH_MOTORS = b'\x2D'
-STOP_MOTORS = b'\x21'
 
 # Responses
 ACK = b'\x10'
@@ -116,6 +116,19 @@ class AttinyProtocol(object):
     def alive(self):
         """Request an 'alive' signal from the microcontroller."""
         self._serial.write(ALIVE)
+        response = self._serial.read(1)
+        if response == ACK:
+            return True
+        # empty response can happen on a timeout, which we interpret as
+        # "not alive"
+        elif response == NAK or response == b'':
+            return False
+        else:
+            raise InvalidResponseException()
+
+    def stop_motors(self):
+        """Immediately stops both motors."""
+        self._serial.write(STOP_MOTORS)
         response = self._serial.read(1)
         if response == ACK:
             return True
