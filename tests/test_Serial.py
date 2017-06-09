@@ -128,9 +128,7 @@ def test_set_both_motors():
     attiny.set_motors(left, right)
     
     assert len(serial.received) == 3
-    assert serial.received[0] == SET_BOTH_MOTORS
-    assert serial.received[1] == left_bytes
-    assert serial.received[2] == right_bytes
+    assert serial.received == SET_BOTH_MOTORS + left_bytes + right_bytes
     
 def test_set_both_motors2():
     serial = MockSerial(ACK)
@@ -145,9 +143,7 @@ def test_set_both_motors2():
     attiny.set_motors(left, right)
     
     assert len(serial.received) == 3
-    assert serial.received[0] == SET_BOTH_MOTORS
-    assert serial.received[1] == left_bytes
-    assert serial.received[2] == right_bytes
+    assert serial.received == SET_BOTH_MOTORS + left_bytes + right_bytes
     
 def test_set_both_motors_zero():
     serial = MockSerial(ACK)
@@ -162,9 +158,7 @@ def test_set_both_motors_zero():
     result = attiny.set_motors(left, right)
     
     assert len(serial.received) == 3
-    assert serial.received[0] == SET_BOTH_MOTORS
-    assert serial.received[1] == left_bytes
-    assert serial.received[2] == right_bytes
+    assert serial.received == SET_BOTH_MOTORS + left_bytes + right_bytes
     
     assert result == True
     
