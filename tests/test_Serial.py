@@ -12,14 +12,19 @@ ENCODERS_RESET_RIGHT = b'\x05'
 ENCODERS_RESET_LEFT = b'\x06'
 ENCODERS_RESET_BOTH = b'\x07'
 
+ECHO = b'\x0C'
+
 ACK = b'\x10'
 NAK = b'\x14'
+
+INVALID_RESPONSE = b'\x23'
 
 STOP_MOTORS = b'\x21'
 
 SET_RIGHT_MOTOR = b'\x25'
 SET_LEFT_MOTOR = b'\x29'
 SET_BOTH_MOTORS = b'\x2D'
+
 
 MOTOR_MIN = -127
 MOTOR_MAX = 127
@@ -29,8 +34,6 @@ MOTOR_ZERO = 0
 BYTES_MOTOR_MIN = MOTOR_MIN.to_bytes(1, 'big', signed=True)
 BYTES_MOTOR_MAX = MOTOR_MAX.to_bytes(1, 'big', signed=True)
 BYTES_MOTOR_ZERO = MOTOR_ZERO.to_bytes(1, 'big', signed=True)
-
-INVALID_RESPONSE = b'\x23'
 
 class MockSerial:
 
@@ -230,6 +233,30 @@ def test_alive_undefined():
         attiny.alive()
 
     assert serial.received == ALIVE
+    
+ECHO_TEST = b'\x88'
+# a byte that is not ECHO_TEST
+ECHO_INVALID = b'\x44'
+
+def test_echo():
+    serial = MockSerial(ECHO_TEST)
+    
+    attiny = AttinyProtocol(serial)
+    
+    response = attiny.echo(ECHO_TEST)
+    
+    assert serial.received == ECHO + ECHO_TEST
+    assert response == ECHO_TEST
+
+def test_echo_invalid():
+    serial = MockSerial(ECHO_INVALID)
+    
+    attiny = AttinyProtocol(serial)
+    
+    with pytest.raises(InvalidResponseException):
+        attiny.echo(ECHO_TEST)
+    
+    assert serial.received == ECHO + ECHO_TEST
     
 def test_stop_motors():
     serial = MockSerial(ACK)
