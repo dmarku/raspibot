@@ -127,3 +127,25 @@ class AttinyProtocol(object):
             return False
         else:
             raise InvalidResponseException()
+
+    def set_right_motor(self, speed):
+        """
+        Set the speed of the right motor.
+
+        Values can be in the range [-127, 127]. Speeds higher than that will be
+        set to their respective extreme. Negative values turn the wheel
+        backwards, positive values turn it forwards. Zero stops the motor.
+        Higher absolute values mean higher speed.
+        """
+        speed = _clamp(speed, MOTOR_MIN, MOTOR_MAX)
+        speed_bytes = speed.to_bytes(1, 'little', signed=True)
+
+        self._serial.write(SET_RIGHT_MOTOR + speed_bytes)
+
+        response = self._serial.read(1)
+        if response == ACK:
+            return True
+        elif response == NAK or response == b'':
+            return False
+        else:
+            raise InvalidResponseException()
