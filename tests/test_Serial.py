@@ -11,6 +11,7 @@ ENCODERS_BOTH = b'\x04'
 ACK = b'\x10'
 NAK = b'\x14'
 
+SET_LEFT_MOTOR = b'\x29'
 SET_BOTH_MOTORS = b'\x2D'
 
 MOTOR_MIN = -127
@@ -114,6 +115,78 @@ def test_alive_undefined():
         attiny.alive()
 
     assert serial.received == ALIVE
+
+
+def test_set_left_motor_min():
+    serial = MockSerial(ACK)
+    
+    left = MOTOR_MIN
+    left_bytes = BYTES_MOTOR_MIN
+    
+    attiny = AttinyProtocol(serial)
+    result = attiny.set_left_motor(left);
+    
+    assert len(serial.received) == 2
+    assert serial.received == SET_LEFT_MOTOR + left_bytes
+    
+    assert result == True
+
+
+def test_set_left_motor_max():
+    serial = MockSerial(ACK)
+    
+    left = MOTOR_MAX
+    left_bytes = BYTES_MOTOR_MAX
+    
+    attiny = AttinyProtocol(serial)
+    result = attiny.set_left_motor(left);
+    
+    assert len(serial.received) == 2
+    assert serial.received == SET_LEFT_MOTOR + left_bytes
+    
+    assert result == True
+
+
+def test_set_left_motor_zero():
+    serial = MockSerial(ACK)
+    
+    left = MOTOR_ZERO
+    left_bytes = BYTES_MOTOR_ZERO
+    
+    attiny = AttinyProtocol(serial)
+    result = attiny.set_left_motor(left);
+    
+    assert len(serial.received) == 2
+    assert serial.received == SET_LEFT_MOTOR + left_bytes
+    
+    assert result == True
+
+
+def test_set_left_motor_nak():
+    serial = MockSerial(NAK)
+    
+    attiny = AttinyProtocol(serial)
+    result = attiny.set_left_motor(0)
+    
+    assert result == False
+
+
+def test_set_left_motor_timeout():
+    serial = MockSerial(b'')
+    
+    attiny = AttinyProtocol(serial)
+    result = attiny.set_left_motor(0)
+    
+    assert result == False
+
+
+def test_set_left_motor_invalid():
+    serial = MockSerial(INVALID_RESPONSE)
+    
+    attiny = AttinyProtocol(serial)
+    with pytest.raises(InvalidResponseException):
+        attiny.set_left_motor(0)
+
     
 def test_set_both_motors():
     serial = MockSerial(ACK)
@@ -184,6 +257,4 @@ def test_set_both_motors_invalid():
     attiny = AttinyProtocol(serial)
     with pytest.raises(InvalidResponseException):
         attiny.set_motors(0, 0)
-
-
 # flake8: noqa
