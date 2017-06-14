@@ -25,6 +25,7 @@ SET_RIGHT_MOTOR = b'\x25'
 SET_LEFT_MOTOR = b'\x29'
 SET_BOTH_MOTORS = b'\x2D'
 
+SET_PI = b'\x2F'
 
 MOTOR_MIN = -127
 MOTOR_MAX = 127
@@ -605,4 +606,121 @@ def test_set_both_motors_invalid():
         
     assert serial.received[:1] == SET_BOTH_MOTORS
 
+INT16_MIN = -(2 ** 16 // 2)
+INT16_MAX = 2 ** 16 // 2 - 1
+UINT8_MIN = 0
+UINT8_MAX = 2 ** 8 - 1
+
+INT16_MIN_ENCODED = INT16_MIN.to_bytes(2, 'big', signed=True)
+INT16_MAX_ENCODED = INT16_MAX.to_bytes(2, 'big', signed=True)
+UINT8_MIN_ENCODED = UINT8_MIN.to_bytes(1, 'big')
+UINT8_MAX_ENCODED = UINT8_MAX.to_bytes(1, 'big')
+
+def test_set_pi_parameters_min():
+    serial = MockSerial(ACK)
+    
+    attiny = AttinyProtocol(serial)
+    result = attiny.set_pi_parameters(INT16_MIN, INT16_MIN, UINT8_MIN)
+    
+    assert result == True
+    
+    assert len(serial.received) == 6
+    assert serial.received[:1] == SET_PI
+    assert serial.received[1:3] == INT16_MIN_ENCODED
+    assert serial.received[3:5] == INT16_MIN_ENCODED
+    assert serial.received[5:] == UINT8_MIN_ENCODED
+    
+def test_set_pi_parameters_under_min():
+    serial = MockSerial(ACK)
+    
+    attiny = AttinyProtocol(serial)
+    result = attiny.set_pi_parameters(INT16_MIN - 1, INT16_MIN - 1, UINT8_MIN - 1)
+    
+    assert result == True
+    
+    assert len(serial.received) == 6
+    assert serial.received[:1] == SET_PI
+    assert serial.received[1:3] == INT16_MIN_ENCODED
+    assert serial.received[3:5] == INT16_MIN_ENCODED
+    assert serial.received[5:] == UINT8_MIN_ENCODED
+    
+def test_set_pi_parameters_max():
+    serial = MockSerial(ACK)
+    
+    attiny = AttinyProtocol(serial)
+    result = attiny.set_pi_parameters(INT16_MAX, INT16_MAX, UINT8_MAX)
+    
+    assert result == True
+    
+    assert len(serial.received) == 6
+    assert serial.received[:1] == SET_PI
+    assert serial.received[1:3] == INT16_MAX_ENCODED
+    assert serial.received[3:5] == INT16_MAX_ENCODED
+    assert serial.received[5:] == UINT8_MAX_ENCODED
+    
+def test_set_pi_parameters_over_max():
+    serial = MockSerial(ACK)
+    
+    attiny = AttinyProtocol(serial)
+    result = attiny.set_pi_parameters(INT16_MAX + 1, INT16_MAX + 1, UINT8_MAX + 1)
+    
+    assert result == True
+    
+    assert len(serial.received) == 6
+    assert serial.received[:1] == SET_PI
+    assert serial.received[1:3] == INT16_MAX_ENCODED
+    assert serial.received[3:5] == INT16_MAX_ENCODED
+    assert serial.received[5:] == UINT8_MAX_ENCODED
+    
+def test_set_pi_parameters_inrange():
+    p = 0
+    i = -1
+    s = 1
+    
+    p_encoded = p.to_bytes(2, 'big', signed=True)
+    i_encoded = i.to_bytes(2, 'big', signed=True)
+    s_encoded = s.to_bytes(1, 'big')
+    
+    serial = MockSerial(ACK)
+    
+    attiny = AttinyProtocol(serial)
+    result = attiny.set_pi_parameters(p, i, s)
+    
+    assert result == True
+    
+    assert len(serial.received) == 6
+    assert serial.received[:1] == SET_PI
+    assert serial.received[1:3] == p_encoded
+    assert serial.received[3:5] == i_encoded
+    assert serial.received[5:] == s_encoded
+    
+def test_set_pi_parameters_nak():
+    serial = MockSerial(NAK)
+    
+    attiny = AttinyProtocol(serial)
+    result = attiny.set_pi_parameters(0, 0, 0)
+    
+    assert len(serial.received) == 6
+    assert result == False
+    
+def test_set_pi_parameters_timeout():
+    serial = MockSerial(b'')
+    
+    attiny = AttinyProtocol(serial)
+    result = attiny.set_pi_parameters(0, 0, 0)
+    
+    assert len(serial.received) == 6
+    assert result == False
+    
+def test_set_pi_parameters_timeout():
+    serial = MockSerial(INVALID_RESPONSE)
+    
+    attiny = AttinyProtocol(serial)
+    
+    with pytest.raises(InvalidResponseException):
+        attiny.set_pi_parameters(0, 0, 0)
+
+    assert len(serial.received) == 6
+    assert serial.received[:1] == SET_PI
+    
 # flake8: noqa
