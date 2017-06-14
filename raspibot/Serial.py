@@ -27,6 +27,7 @@ SET_BOTH_MOTORS = b'\x2D'
 SET_PI_PARAMETERS = b'\x2F'
 
 SET_BUZZER = b'\x40'
+STOP_BUZZER = b'\x43'
 
 # Responses
 ACK = b'\x10'
@@ -288,6 +289,18 @@ class AttinyProtocol(object):
 
         self._serial.write(message)
 
+        response = self._serial.read(1)
+        if response == ACK:
+            return True
+        elif response == NAK or response == b'':
+            return False
+        else:
+            raise InvalidResponseException()
+
+    def stop_buzzer(self):
+        """Stop any buzzer sound."""
+        self._serial.write(STOP_BUZZER)
+        
         response = self._serial.read(1)
         if response == ACK:
             return True
