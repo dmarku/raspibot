@@ -26,6 +26,8 @@ SET_BOTH_MOTORS = b'\x2D'
 
 SET_PI_PARAMETERS = b'\x2F'
 
+SET_BUZZER = b'\x40'
+
 # Responses
 ACK = b'\x10'
 NAK = b'\x14'
@@ -244,6 +246,45 @@ class AttinyProtocol(object):
         scale_encoded = encoder_scale.to_bytes(1, 'big')
 
         message = SET_PI_PARAMETERS + p_encoded + i_encoded + scale_encoded
+
+        self._serial.write(message)
+
+        response = self._serial.read(1)
+        if response == ACK:
+            return True
+        elif response == NAK or response == b'':
+            return False
+        else:
+            raise InvalidResponseException()
+
+    FREQUENCY_MIN = 0
+    FREQUENCY_MAX = 2 ** 16 - 1
+
+    DURATION_MIN = 0
+    DURATION_MAX = 2 ** 16 - 1
+
+    VOLUME_MIN = 0
+    VOLUME_MAX = 15
+
+    def set_buzzer(self, frequency, duration, volume):
+        """
+        Play a tone on the buzzer.
+
+        Plays a tone on the buzzer for the given duration with a given volume.
+        frequency is in the range (0, 65535), excessive values will be clipped.
+        duration is in milliseconds and in the range (0, 65535), excessive
+        values will be clipped.
+        volume is in the range (0, 15), excessive values will be clipped.
+        """
+        frequency = _clamp(frequency, self.FREQUENCY_MIN, self.FREQUENCY_MAX)
+        duration = _clamp(duration, self.DURATION_MIN, self.DURATION_MAX)
+        volume = _clamp(volume, self.VOLUME_MIN, self.VOLUME_MAX)
+
+        frequency_encoded = frequency.to_bytes(2, 'big')
+        duration_encoded = duration.to_bytes(2, 'big')
+        volume_encoded = volume.to_bytes(1, 'big')
+
+        message = SET_BUZZER + frequency_encoded + duration_encoded + volume_encoded
 
         self._serial.write(message)
 
