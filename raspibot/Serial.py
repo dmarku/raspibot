@@ -24,6 +24,8 @@ SET_LEFT_MOTOR = b'\x29'
 SET_RIGHT_MOTOR = b'\x25'
 SET_BOTH_MOTORS = b'\x2D'
 
+SET_PI_PARAMETERS = b'\x2F'
+
 # Responses
 ACK = b'\x10'
 NAK = b'\x14'
@@ -216,6 +218,34 @@ class AttinyProtocol(object):
         speed_bytes = speed.to_bytes(1, 'big', signed=True)
 
         self._serial.write(SET_RIGHT_MOTOR + speed_bytes)
+
+        response = self._serial.read(1)
+        if response == ACK:
+            return True
+        elif response == NAK or response == b'':
+            return False
+        else:
+            raise InvalidResponseException()
+
+    def set_pi_parameters(self, p, i, encoder_scale):
+        """
+        Set the parameters of the PI controller.
+
+        `p` and `i` can be in the range of signed 16-bit integers
+        (-32768, 32767). encoder_scale can be in the range of an unsigned 8-bit
+        integer.
+        """
+        p = _clamp(p, -32768, 32767)
+        i = _clamp(i, -32768, 32767)
+        encoder_scale = _clamp(encoder_scale, 0, 255)
+
+        p_encoded = p.to_bytes(2, 'big', signed=True)
+        i_encoded = i.to_bytes(2, 'big', signed=True)
+        scale_encoded = encoder_scale.to_bytes(1, 'big')
+
+        message = SET_PI_PARAMETERS + p_encoded + i_encoded + scale_encoded
+
+        self._serial.write(message)
 
         response = self._serial.read(1)
         if response == ACK:
