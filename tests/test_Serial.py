@@ -27,6 +27,8 @@ SET_BOTH_MOTORS = b'\x2D'
 
 SET_PI = b'\x2F'
 
+SET_BUZZER = b'\x40'
+
 MOTOR_MIN = -127
 MOTOR_MAX = 127
 MOTOR_ZERO = 0
@@ -722,5 +724,120 @@ def test_set_pi_parameters_timeout():
 
     assert len(serial.received) == 6
     assert serial.received[:1] == SET_PI
+    
+UINT16_MAX = (2 ** 16) - 1
+
+FREQUENCY_MIN = 0
+FREQUENCY_MAX = UINT16_MAX
+
+FREQUENCY_MIN_ENCODED = FREQUENCY_MIN.to_bytes(2, 'big')
+FREQUENCY_MAX_ENCODED = FREQUENCY_MAX.to_bytes(2, 'big')
+
+DURATION_MIN = 0
+DURATION_MAX = UINT16_MAX
+
+DURATION_MIN_ENCODED = DURATION_MIN.to_bytes(2, 'big')
+DURATION_MAX_ENCODED = DURATION_MAX.to_bytes(2, 'big')
+
+VOLUME_MIN = 0
+VOLUME_MAX = 15
+
+VOLUME_MIN_ENCODED = VOLUME_MIN.to_bytes(1, 'big')
+VOLUME_MAX_ENCODED = VOLUME_MAX.to_bytes(1, 'big')
+
+def test_set_buzzer_min():
+    serial = MockSerial(ACK)
+    attiny = AttinyProtocol(serial)
+    
+    result = attiny.set_buzzer(FREQUENCY_MIN, DURATION_MIN, VOLUME_MIN)
+    
+    assert result == True
+    
+    assert len(serial.received) == 6
+    assert serial.received[:1] == SET_BUZZER
+    assert serial.received[1:3] == FREQUENCY_MIN_ENCODED
+    assert serial.received[3:5] == DURATION_MIN_ENCODED
+    assert serial.received[5:] == VOLUME_MIN_ENCODED
+    
+def test_set_buzzer_under_min():
+    serial = MockSerial(ACK)
+    attiny = AttinyProtocol(serial)
+    
+    result = attiny.set_buzzer(FREQUENCY_MIN - 1, DURATION_MIN - 1, VOLUME_MIN - 1)
+    
+    assert result == True
+    
+    assert len(serial.received) == 6
+    assert serial.received[:1] == SET_BUZZER
+    assert serial.received[1:3] == FREQUENCY_MIN_ENCODED
+    assert serial.received[3:5] == DURATION_MIN_ENCODED
+    assert serial.received[5:] == VOLUME_MIN_ENCODED
+    
+def test_set_buzzer_max():
+    serial = MockSerial(ACK)
+    attiny = AttinyProtocol(serial)
+    
+    result = attiny.set_buzzer(FREQUENCY_MAX, DURATION_MAX, VOLUME_MAX)
+    
+    assert result == True
+    
+    assert len(serial.received) == 6
+    assert serial.received[:1] == SET_BUZZER
+    assert serial.received[1:3] == FREQUENCY_MAX_ENCODED
+    assert serial.received[3:5] == DURATION_MAX_ENCODED
+    assert serial.received[5:] == VOLUME_MAX_ENCODED
+    
+def test_set_buzzer_over_max():
+    serial = MockSerial(ACK)
+    attiny = AttinyProtocol(serial)
+    
+    result = attiny.set_buzzer(FREQUENCY_MAX + 1, DURATION_MAX + 1, VOLUME_MAX + 1)
+    
+    assert result == True
+    
+    assert len(serial.received) == 6
+    assert serial.received[:1] == SET_BUZZER
+    assert serial.received[1:3] == FREQUENCY_MAX_ENCODED
+    assert serial.received[3:5] == DURATION_MAX_ENCODED
+    assert serial.received[5:] == VOLUME_MAX_ENCODED
+    
+def test_set_buzzer_inrange():
+    serial = MockSerial(ACK)
+    attiny = AttinyProtocol(serial)
+    
+    frequency = 440
+    duration = 1000
+    volume = 7
+    
+    result = attiny.set_buzzer(frequency, duration, volume)
+    
+    assert result == True
+    
+    assert len(serial.received) == 6
+    assert serial.received[:1] == SET_BUZZER
+    assert serial.received[1:3] == frequency.to_bytes(2, 'big')
+    assert serial.received[3:5] == duration.to_bytes(2, 'big')
+    assert serial.received[5:] == volume.to_bytes(1, 'big')
+    
+def test_set_buzzer_nak():
+    serial = MockSerial(NAK)
+    attiny = AttinyProtocol(serial)
+    result = attiny.set_buzzer(0, 0, 0)
+    
+    assert result == False
+    
+def test_set_buzzer_timeout():
+    serial = MockSerial(b'')
+    attiny = AttinyProtocol(serial)
+    result = attiny.set_buzzer(0, 0, 0)
+    
+    assert result == False
+    
+def test_set_buzzer_invalid():
+    serial = MockSerial(INVALID_RESPONSE)
+    attiny = AttinyProtocol(serial)
+    
+    with pytest.raises(InvalidResponseException):
+        attiny.set_buzzer(0, 0, 0)
     
 # flake8: noqa
