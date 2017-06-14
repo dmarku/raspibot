@@ -28,6 +28,7 @@ SET_BOTH_MOTORS = b'\x2D'
 SET_PI = b'\x2F'
 
 SET_BUZZER = b'\x40'
+STOP_BUZZER = b'\x43'
 
 MOTOR_MIN = -127
 MOTOR_MAX = 127
@@ -839,5 +840,34 @@ def test_set_buzzer_invalid():
     
     with pytest.raises(InvalidResponseException):
         attiny.set_buzzer(0, 0, 0)
+        
+def test_stop_buzzer():
+    serial = MockSerial(ACK)
+    attiny = AttinyProtocol(serial)
+    result = attiny.stop_buzzer()
+    
+    assert result == True
+    assert serial.received == STOP_BUZZER
+    
+def test_stop_buzzer_nak():
+    serial = MockSerial(NAK)
+    attiny = AttinyProtocol(serial)
+    result = attiny.stop_buzzer()
+    
+    assert result == False
+    
+def test_stop_buzzer_timeout():
+    serial = MockSerial(b'')
+    attiny = AttinyProtocol(serial)
+    result = attiny.stop_buzzer()
+    
+    assert result == False
+    
+def test_stop_buzzer_invalid():
+    serial = MockSerial(INVALID_RESPONSE)
+    attiny = AttinyProtocol(serial)
+    
+    with pytest.raises(InvalidResponseException):
+        attiny.stop_buzzer()
     
 # flake8: noqa
