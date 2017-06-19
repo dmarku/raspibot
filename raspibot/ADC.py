@@ -11,7 +11,7 @@ def _swap_bytes_16bit(value):
     return ((value & 0xFF) << 8) | ((value & 0xFF00) >> 8)
 
 
-class ADC:
+class ADS1015:
     """
     Implements the I2C protocol for the TI ADS1015 chip.
 
@@ -19,25 +19,32 @@ class ADC:
     I2C bus from the Texas Instruments ADS1015 chip.
     """
 
-    _channels = [0, 1, 2, 3]
+    _CHANNELS = [0, 1, 2, 3]
 
     __CONFIG_REGISTER = 0b01
     __CONVERSION_REGISTER = 0b00
 
-    __CONFIG_MUX_BITS = 0b0111000000000000
+    # bits [14:12] are for configuring the mux
+    __CONFIG_MUX_BITS = 0b111 << 12
     # Bits zur Konfiguration des Muxers zum Messen von Spannungen relativ
     # zu Masse, für Eingänge A1 bis A4
     __CONFIG_MUX_ABSOLUTE = [
-        0b0100000000000000,
-        0b0101000000000000,
-        0b0110000000000000,
-        0b0111000000000000]
+        0b100 << 12,
+        0b101 << 12,
+        0b110 << 12,
+        0b111 << 12]
 
-    __CONFIG_PGA_BITS = 0b0000111000000000
-    __CONFIG_PGA_4_VOLT = 0b0000001000000000
+    # bits [11:9] configure the programmable gain amplifier
+    __CONFIG_PGA_BITS = 0b111 << 9
+    __CONFIG_PGA_4_VOLT = 0b001 << 9
 
-    __CONFIG_MODE_BITS = 0b0000000100000000
-    __CONFIG_MODE_CONTINUOUS = 0
+    __CONFIG_MODE_BITS = 1 << 8
+    __CONFIG_MODE_CONTINUOUS = 0 << 8
+
+    def _set_bits(config, mask, bits):
+        # clear the bits before setting them
+        config &= ~mask
+        config |= (bits & mask)
 
     def __init__(self, bus, bus_address=0x49):
         """Create a new object for communicating on a given bus and address."""
@@ -46,14 +53,17 @@ class ADC:
 
         config = self.read_config_register()
 
-        config &= ~ADC.__CONFIG_MUX_BITS
-        config |= ADC.__CONFIG_MUX_ABSOLUTE[0]
+        self._set_bits(config,
+                       self.__CONFIG_MUX_BITS,
+                       self.__CONFIG_MUX_ABSOLUTE[0])
 
-        config &= ~ADC.__CONFIG_PGA_BITS
-        config |= ADC.__CONFIG_PGA_4_VOLT
+        self._set_bits(config,
+                       self.__CONFIG_PGA_BITS,
+                       self.__CONFIG_PGA_4_VOLT)
 
-        config &= ~ADC.__CONFIG_MODE_BITS
-        config |= ADC.__CONFIG_MODE_CONTINUOUS
+        self._set_bits(config,
+                       self.__CONFIG_MODE_BITS,
+                       self.__CONFIG_MODE_CONTINUOUS)
 
         self.write_config_register(config)
 
@@ -68,7 +78,7 @@ class ADC:
     def read_config_register(self):
         """Retrieve the two-byte configuration register from the ADC."""
         config = self.__bus.read_word_data(
-            self.__bus_address, ADC.__CONFIG_REGISTER)
+            self.__bus_address, self.__CONFIG_REGISTER)
         return _swap_bytes_16bit(config)
 
     def write_config_register(self, configuration):
@@ -79,13 +89,13 @@ class ADC:
         """
         self.__bus.write_word_data(
             self.__bus_address,
-            ADC.__CONFIG_REGISTER,
+            self.__CONFIG_REGISTER,
             _swap_bytes_16bit(configuration))
 
     def read_conversion_value(self):
         """Read the contents of the conversion register on the ADC."""
         sensor_value = self.__bus.read_word_data(
-            self.__bus_address, ADC.__CONVERSION_REGISTER)
+            self.__bus_address, self.__CONVERSION_REGISTER)
         sensor_value = _swap_bytes_16bit(sensor_value)
         # die niederwertigsten 4 Bit sind immer auf 0 gesetzt, daher können
         # diese ignoriert werden (siehe Datenblatt, Registerbeschreibung
@@ -99,12 +109,15 @@ class ADC:
         Absolute voltage values are measured with reference to the ground
         potential.
         """
-        if channel not in self._channels:
+        if channel not in self._CHANNELS:
             return
         else:
             config = self.read_config_register()
-            config &= ~ADC.__CONFIG_MUX_BITS
-            config |= ADC.__CONFIG_MUX_ABSOLUTE[channel]
+
+            self._set_bits(config,
+                           self.__CONFIG_MUX_BITS,
+                           self.__CONFIG_MUX_ABSOLUTE[channel])
+
             self.write_config_register(config)
 
     def read_channel(self, channel):

@@ -1,9 +1,9 @@
-from adc import ADC
+from raspibot import ADS1015
 from smbus import SMBus
 from time import sleep
 
 bus = SMBus(1)
-adc = ADC(bus)
+adc = ADS1015(bus)
 
 # Kontinuierliche Ausgabe der Sensorwerte auf der Standardausgabe, bis das
 # Programm mit Strg+C beendet wird
