@@ -109,8 +109,10 @@ class Display:
     def load_custom_character(self, picture, number):
         if number>=0 and number<=7:
             self._write_byte([0, 1, number&4, number&2, number&1, 0, 0, 0])
-            for c in range(8):
-                self.print(bits(picture[c]))
+            if len(picture)==8:
+                for c in picture:
+                    self._select_data_register()
+                    self._write_byte(c)
 
     def cursor_off(self):
         GPIO.output(self.register_select, 0)
