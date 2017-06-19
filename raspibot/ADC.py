@@ -11,6 +11,12 @@ def _swap_bytes_16bit(value):
     return ((value & 0xFF) << 8) | ((value & 0xFF00) >> 8)
 
 
+def _set_bits(config, mask, bits):
+    # clear the bits before setting them
+    config &= ~mask
+    config |= (bits & mask)
+
+
 class ADS1015:
     """
     Implements the I2C protocol for the TI ADS1015 chip.
@@ -41,11 +47,6 @@ class ADS1015:
     __CONFIG_MODE_BITS = 1 << 8
     __CONFIG_MODE_CONTINUOUS = 0 << 8
 
-    def _set_bits(config, mask, bits):
-        # clear the bits before setting them
-        config &= ~mask
-        config |= (bits & mask)
-
     def __init__(self, bus, bus_address=0x49):
         """Create a new object for communicating on a given bus and address."""
         self.__bus = bus
@@ -53,17 +54,9 @@ class ADS1015:
 
         config = self.read_config_register()
 
-        self._set_bits(config,
-                       self.__CONFIG_MUX_BITS,
-                       self.__CONFIG_MUX_ABSOLUTE[0])
-
-        self._set_bits(config,
-                       self.__CONFIG_PGA_BITS,
-                       self.__CONFIG_PGA_4_VOLT)
-
-        self._set_bits(config,
-                       self.__CONFIG_MODE_BITS,
-                       self.__CONFIG_MODE_CONTINUOUS)
+        _set_bits(config, self.__CONFIG_MUX_BITS, self.__CONFIG_MUX_ABSOLUTE[0])
+        _set_bits(config, self.__CONFIG_PGA_BITS, self.__CONFIG_PGA_4_VOLT)
+        _set_bits(config, self.__CONFIG_MODE_BITS, self.__CONFIG_MODE_CONTINUOUS)
 
         self.write_config_register(config)
 
@@ -114,9 +107,9 @@ class ADS1015:
         else:
             config = self.read_config_register()
 
-            self._set_bits(config,
-                           self.__CONFIG_MUX_BITS,
-                           self.__CONFIG_MUX_ABSOLUTE[channel])
+            _set_bits(config,
+                      self.__CONFIG_MUX_BITS,
+                      self.__CONFIG_MUX_ABSOLUTE[channel])
 
             self.write_config_register(config)
 
