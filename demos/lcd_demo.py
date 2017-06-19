@@ -1,5 +1,5 @@
 # coding: utf-8
-from LCD import Display
+from raspibot import Display
 d = Display()
 d.init()
 d.clear()
