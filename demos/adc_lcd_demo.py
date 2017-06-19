@@ -1,6 +1,6 @@
 from smbus import SMBus
 from LCD import Display
-from adc import ADC
+from raspibot import ADS1015 as ADC
 from time import sleep
 
 d = Display()
