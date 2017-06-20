@@ -32,6 +32,8 @@ class Display:
         # GPIO.output(self.data, [0, 0, 1, 1])
         self.data = [self.d7, self.d6, self.d5, self.d4]
 
+        self.init()
+
     def init(self):
         """Initialize the GPIO pins and ensure 4-bit communication mode."""
         GPIO.setmode(GPIO.BCM)
@@ -57,6 +59,7 @@ class Display:
         self._write_byte([0, 0, 1, 0, 1, 0, 0, 0])
 
         self.clear()
+        sleep(0.001)
 
     def wait_for_controller(self):
         GPIO.output(self.rw, 1)
