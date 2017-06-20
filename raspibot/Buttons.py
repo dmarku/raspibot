@@ -26,5 +26,5 @@ class Button(object):
         GPIO.wait_for_edge(self.BUTTON, GPIO.FALLING)
 
     def isPressed(self):
-        if(GPIO.input(self.BUTTON)): return true
-        else: return false
+        if(GPIO.input(self.BUTTON)): return True
+        else: return False
