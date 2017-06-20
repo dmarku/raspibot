@@ -1,4 +1,9 @@
-"""Provides a class for controlling the RaspiBot's LCD display."""
+# -*- coding: utf-8 -*-
+
+# LCD control for the RaspiBot v2
+# basically, an implementation of the HD44780 controller protocol,
+# made-to-measure for our 4-bit interface to a 16x2 character LCD
+
 import RPi.GPIO as GPIO
 from time import sleep
 
@@ -51,23 +56,29 @@ class Display:
         # initialize function mode
         self._write_byte([0, 0, 1, 0, 1, 0, 0, 0])
 
-    def _wait_for_controller(self):
-        """Stop communication until the previous transfer is complete."""
-        # TODO: implement waiting for busy flag
-        sleep(0.002)
+        self.clear()
+
+    def wait_for_controller(self):
+        GPIO.output(self.rw, 1)
+        GPIO.output(self.register_select, 0)
+        GPIO.setup(self.d7, GPIO.IN)
+        while not GPIO.input(self.d7):
+            a=1
+            #make it nicer
+        GPIO.setup(self.d7, GPIO.OUT)
 
     def _write_nibble(self, nibble):
         """Send four bits to the display controller."""
         GPIO.output(self.rw, 0)
-        GPIO.output(self.enable, 1)
         GPIO.output(self.data, nibble)
+        GPIO.output(self.enable, 1)
         GPIO.output(self.enable, 0)
-        self.wait_for_controller()
 
     def _write_byte(self, bits):
         """Send a whole byte to the display controller."""
         self._write_nibble(bits[0:4])
         self._write_nibble(bits[4:8])
+        self.wait_for_controller()
 
     def _select_data_register(self):
         GPIO.output(self.register_select, 1)
@@ -78,7 +89,6 @@ class Display:
     def clear(self):
         """
         Clear display and reset cursor.
-
         Clear the LCD of any content and reset the cursor to the top left
         character of the display.
         """
@@ -90,12 +100,27 @@ class Display:
         self._select_data_register()
         self._write_byte(bits)
 
-    def cursor_goto_line(self, line):
-        """Set the cursor to the beginning of a line."""
+    def cursor_goto_xy(self, x ,y ):
         self._select_instruction_register()
         # WARNING: only works as expected for line == 1 or line == 0
-        line = 0 if line == 0 else 1
-        self._write_byte([1, line, 0, 0, 0, 0, 0, 0])
+        y = 0 if y == 0 else 1
+        self._write_byte([1, y, x&32, x&16, x&8, x&4, x&2, x&1])
+
+    def load_custom_character(self, picture, number):
+        if number>=0 and number<=7:
+            self._write_byte([0, 1, number&4, number&2, number&1, 0, 0, 0])
+            if len(picture)==8:
+                for c in picture:
+                    self._select_data_register()
+                    self._write_byte(c)
+
+    def cursor_off(self):
+        GPIO.output(self.register_select, 0)
+        self._write_byte([0, 0, 0, 0, 1, 1, 0, 0])
+
+    def cursor_on(self):
+        GPIO.output(self.register_select, 0)
+        self._write_byte([0, 0, 0, 0, 1, 1, 1, 1])
 
     def print(self, string):
         """Print a string at the cursor position."""
