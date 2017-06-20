@@ -1,5 +1,6 @@
 """Provides a class for controlling the TI ADS105."""
 from time import sleep
+import RPi.GPIO as GPIO
 
 # ACHTUNG: Das SMBus-Protokoll geht bei der Übertragung von Werten mit
 # mehr als einem Byte Länge (16-bit-Word) davon aus, dass das LSB zuerst
@@ -15,6 +16,7 @@ def _set_bits(config, mask, bits):
     # clear the bits before setting them
     config &= ~mask
     config |= (bits & mask)
+    return config
 
 
 class ADS1015:
@@ -25,11 +27,15 @@ class ADS1015:
     I2C bus from the Texas Instruments ADS1015 chip.
     """
 
+    alrt=22
+
     _CHANNELS = [0, 1, 2, 3]
 
     __CONFIG_REGISTER = 0b01
     __CONVERSION_REGISTER = 0b00
 
+    # bits [15] start the conversion
+    __CONFIG_CONVERSION_START = 1 << 15
     # bits [14:12] are for configuring the mux
     __CONFIG_MUX_BITS = 0b111 << 12
     # Bits zur Konfiguration des Muxers zum Messen von Spannungen relativ
@@ -46,6 +52,7 @@ class ADS1015:
 
     __CONFIG_MODE_BITS = 1 << 8
     __CONFIG_MODE_CONTINUOUS = 0 << 8
+    __CONFIG_MODE_SINGLE     = 1 << 8
 
     def __init__(self, bus, bus_address=0x49):
         """Create a new object for communicating on a given bus and address."""
@@ -54,11 +61,14 @@ class ADS1015:
 
         config = self.read_config_register()
 
-        _set_bits(config, self.__CONFIG_MUX_BITS, self.__CONFIG_MUX_ABSOLUTE[0])
-        _set_bits(config, self.__CONFIG_PGA_BITS, self.__CONFIG_PGA_4_VOLT)
-        _set_bits(config, self.__CONFIG_MODE_BITS, self.__CONFIG_MODE_CONTINUOUS)
+        config=_set_bits(config, self.__CONFIG_MUX_BITS, self.__CONFIG_MUX_ABSOLUTE[0])
+        config=_set_bits(config, self.__CONFIG_PGA_BITS, self.__CONFIG_PGA_4_VOLT)
+        config=_set_bits(config, self.__CONFIG_MODE_BITS, self.__CONFIG_MODE_SINGLE)
 
         self.write_config_register(config)
+
+        GPIO.setmode(GPIO.BCM)
+        GPIO.setup(self.alrt, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
     def bus(self):
         """Get the bus that is currently used for communication."""
@@ -107,9 +117,10 @@ class ADS1015:
         else:
             config = self.read_config_register()
 
-            _set_bits(config,
+            config=_set_bits(config,
                       self.__CONFIG_MUX_BITS,
                       self.__CONFIG_MUX_ABSOLUTE[channel])
+            config=_set_bits(config, self.__CONFIG_CONVERSION_START, self.__CONFIG_CONVERSION_START)
 
             self.write_config_register(config)
 
@@ -122,8 +133,12 @@ class ADS1015:
 
         :returns the converted channel value as an integer
         """
-        self.set_mux_absolute(channel)
-        # lässt dem ADC Zeit, eine neue Messung mit der neuen
-        # Konfiguration stattfinden zu lassen
-        sleep(0.001)
-        return self.read_conversion_value()
+        if channel not in self._CHANNELS:
+            return
+        else:
+            self.set_mux_absolute(channel)
+            # lässt dem ADC Zeit, eine neue Messung mit der neuen
+            # Konfiguration stattfinden zu lassen
+            while not GPIO.input(self.alrt):
+                a=1
+            return self.read_conversion_value()
