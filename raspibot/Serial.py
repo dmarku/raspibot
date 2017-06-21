@@ -1,7 +1,6 @@
 """Implements the serial interface protocol of RaspiBot's Attiny firmware."""
 
 from collections import namedtuple
-import numpy
 
 EncoderValues = namedtuple('EncoderValues', 'left right')
 
@@ -70,22 +69,22 @@ class AttinyProtocol(object):
         """Request both left and right encoder values."""
         self._serial.write(ENCODERS_BOTH)
         response = self._serial.read(4)
-        left = numpy.int16.from_bytes(response[:2], 'big')
-        right = numpy.int16.from_bytes(response[2:], 'big')
+        left = int.from_bytes(response[:2], 'big', signed=True)
+        right = int.from_bytes(response[2:], 'big', signed=True)
         return EncoderValues(left, right)
 
     def get_left_encoder(self):
         """Request the left encoder value."""
         self._serial.write(ENCODERS_LEFT)
         response = self._serial.read(2)
-        value = numpy.int16.from_bytes(response, 'big')
+        value = int.from_bytes(response, 'big', signed=True)
         return value
 
     def get_right_encoder(self):
         """Request the right encoder value."""
         self._serial.write(ENCODERS_RIGHT)
         response = self._serial.read(2)
-        value = numpy.int16.from_bytes(response, 'big')
+        value = int.from_bytes(response, 'big', signed=True)
         return value
 
     def reset_encoders(self):
